@@ -152,6 +152,7 @@ function openModal(cat) {
   } else {
     cat.images.forEach((src, i) => {
       const img = document.createElement('img');
+      img.className = 'portfolio-img';
       img.src = src;
       img.alt = `${cat.title} - ${i + 1}`;
       img.loading = 'lazy';
@@ -205,11 +206,14 @@ const label = document.getElementById('previewLabel');
 const productSel = document.getElementById('qProduct');
 const widthInput = document.getElementById('qWidth');
 const heightInput = document.getElementById('qHeight');
-const finishSel = document.getElementById('qFinish');
+const finishGroup = document.getElementById('qFinishGroup');
+const previewBox = document.querySelector('.quoter-preview');
 const lblW = document.getElementById('lblW');
 const lblH = document.getElementById('lblH');
 
 let currentUnit = 'cm';
+let currentFinish = 'Aluminio natural';
+let currentFinishColor = '#c7c7cc';
 
 document.querySelectorAll('#measureType button').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -222,17 +226,36 @@ document.querySelectorAll('#measureType button').forEach(btn => {
   });
 });
 
+finishGroup.querySelectorAll('.finish-pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    finishGroup.querySelectorAll('.finish-pill').forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-pressed', 'false');
+    });
+    btn.classList.add('active');
+    btn.setAttribute('aria-pressed', 'true');
+    currentFinish = btn.dataset.finish;
+    currentFinishColor = btn.dataset.color;
+    renderPreview();
+  });
+});
+
+function finishKey() {
+  if (currentFinish.includes('negro')) return 'negro';
+  if (currentFinish.includes('blanco')) return 'blanco';
+  if (currentFinish.includes('bronce')) return 'bronce';
+  return 'natural';
+}
+
 function getFinishColor() {
-  const v = finishSel.value;
-  if (v.includes('negro')) return '#1d1d1f';
-  if (v.includes('blanco')) return '#e5e5ea';
-  if (v.includes('bronce')) return '#8b6f47';
-  return '#c7c7cc';
+  return currentFinishColor;
 }
 
 function renderPreview() {
   let w = parseFloat(widthInput.value) || 120;
   let h = parseFloat(heightInput.value) || 100;
+
+  previewBox.dataset.finish = finishKey();
 
   // Convertir a cm internamente para escalar
   const wCm = currentUnit === 'in' ? w * 2.54 : w;
@@ -254,7 +277,10 @@ function renderPreview() {
 
   let inner = '';
 
-  // Marco exterior
+  // Marco exterior (contorno sutil para el acabado blanco)
+  if (finishKey() === 'blanco') {
+    inner += `<rect x="${x}" y="${y}" width="${rw}" height="${rh}" fill="none" stroke="#d1d1d6" stroke-width="8" rx="2"/>`;
+  }
   inner += `<rect x="${x}" y="${y}" width="${rw}" height="${rh}" fill="none" stroke="${frameColor}" stroke-width="6" rx="2"/>`;
 
   // Vidrio
@@ -310,7 +336,6 @@ function renderPreview() {
 productSel.addEventListener('change', renderPreview);
 widthInput.addEventListener('input', renderPreview);
 heightInput.addEventListener('input', renderPreview);
-finishSel.addEventListener('change', renderPreview);
 
 renderPreview();
 
@@ -321,7 +346,7 @@ document.getElementById('qSend').addEventListener('click', () => {
   const prod = productSel.options[productSel.selectedIndex].text;
   const w = widthInput.value;
   const h = heightInput.value;
-  const finish = finishSel.value;
+  const finish = currentFinish;
 
   const msg = `Hola *Aluminio Alfa y Omega*, quiero cotizar:
 
